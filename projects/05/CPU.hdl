@@ -40,31 +40,54 @@ CHIP CPU {
 
     PARTS:
 		// Wire
-		Wire(in=instruction[0], out=msb);
-		Wire(in=instruction[3], out=a);
-		Wire(in=instruction[4], out=zx);
-		Wire(in=instruction[5], out=nx);
-		Wire(in=instruction[6], out=zy);
-		Wire(in=instruction[7], out=ny);
-		Wire(in=instruction[8], out=f);
-		Wire(in=instruction[9], out=no);
-		Wire(in=instruction[10], out=d1);
-		Wire(in=instruction[11], out=d2);
-		Wire(in=instruction[12], out=d3);
-		Wire(in=instruction[13], out=j1);
-		Wire(in=instruction[14], out=j2);
-		Wire(in=instruction[15], out=j3);
+		Wire(in=instruction[15], out=msb);
+		Wire(in=instruction[12], out=a);
+		Wire(in=instruction[11], out=zx);
+		Wire(in=instruction[10], out=nx);
+		Wire(in=instruction[9], out=zy);
+		Wire(in=instruction[8], out=ny);
+		Wire(in=instruction[7], out=f);
+		Wire(in=instruction[6], out=no);
+		Wire(in=instruction[5], out=d1);
+		Wire(in=instruction[4], out=d2);
+		Wire(in=instruction[3], out=d3);
+		Wire(in=instruction[2], out=j1);
+		Wire(in=instruction[1], out=j2);
+		Wire(in=instruction[0], out=j3);
 		
 		// Mux0
 		Mux16(a=instruction, b=aluOut, sel=d1, out=mux0Out);
 		// Mux1
 		Mux16(a=regAOut, b=inM, sel=a, out=mux1Out);
 		// A register
-		Register(in=mux0Out, load=d1, out=regAOut, out=addressM);
+		Not(in=msb, out=msbNot);
+		Or(a=d1, b=msbNot, out=regALoad);
+		Register(in=mux0Out, load=regALoad, out=regAOut, out[0..14]=addressM);
 		// D Register
 		Register(in=aluOut, load=d2, out=regDOut);
 		// PC
-		PC(in=regAOut, load=, inc=, reset=, out=pc);
+		Nand(a=msb, b=jmp, out=pcInc);
+		PC(in=regAOut, load=jmp, inc=pcInc, reset=reset, out[0..14]=pc);
 		// ALU
-		ALU(zx=zx, nx=instruction[5], zy=zy, ny=ny, f=f, no=no, out=outM, zr=aluZr, ng=aluNg);
+		ALU(zx=zx, nx=instruction[5], zy=zy, ny=ny, f=f, no=no, out=outM, out=aluOut, zr=aluZr, ng=aluNg);
+		
+		// computer the opposites of the alu output.
+		Not(in=aluZr, out=aluZrNot);
+		Not(in=aluNg, out=aluNgNot);
+		
+		// jgt
+		And(a=j3, b=aluZrNot, out=tmp0);
+		And(a=tmp0, b=aluNgNot, out=jgt);
+		
+		// jeq
+		And(a=j2, b=aluZr, out=jeq);
+		
+		// jlt
+		And(a=j1, b=aluNg, out=jlt);
+		
+		Or(a=jgt, b=jeq, out=tmp1);
+		Or(a=tmp1, b=jlt, out=tmp2);
+		And(a=tmp2, b=msb, out=jmp);
+		
+		Not(in=jmp, out=jmpNot);
 }
