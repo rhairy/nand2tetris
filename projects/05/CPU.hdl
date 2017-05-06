@@ -39,16 +39,32 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
+		// Wire
+		Wire(in=instruction[0], out=msb);
+		Wire(in=instruction[3], out=a);
+		Wire(in=instruction[4], out=zx);
+		Wire(in=instruction[5], out=nx);
+		Wire(in=instruction[6], out=zy);
+		Wire(in=instruction[7], out=ny);
+		Wire(in=instruction[8], out=f);
+		Wire(in=instruction[9], out=no);
+		Wire(in=instruction[10], out=d1);
+		Wire(in=instruction[11], out=d2);
+		Wire(in=instruction[12], out=d3);
+		Wire(in=instruction[13], out=j1);
+		Wire(in=instruction[14], out=j2);
+		Wire(in=instruction[15], out=j3);
+		
 		// Mux0
-		Mux16(a=instruction, b=aluOut, sel=instruction[10], out=mux0Out);
+		Mux16(a=instruction, b=aluOut, sel=d1, out=mux0Out);
 		// Mux1
-		Mux16(a=regAOut, b=inM, sel=instruction[3], out=mux1Out);
+		Mux16(a=regAOut, b=inM, sel=a, out=mux1Out);
 		// A register
-		Register(in=mux0Out, load=instruction[10], out=regAOut, out=addressM);
+		Register(in=mux0Out, load=d1, out=regAOut, out=addressM);
 		// D Register
-		Register(in=aluOut, load=instruction[11], out=regDOut);
+		Register(in=aluOut, load=d2, out=regDOut);
 		// PC
 		PC(in=regAOut, load=, inc=, reset=, out=pc);
 		// ALU
-		ALU(zx=instruction[4], nx=instruction[5], zy=instruction[6], ny=instruction[7], f=instruction[8], no=instruction[9], out=outM, zr=aluZr, ng=aluNg);
+		ALU(zx=zx, nx=instruction[5], zy=zy, ny=ny, f=f, no=no, out=outM, zr=aluZr, ng=aluNg);
 }
