@@ -54,6 +54,9 @@ CHIP CPU {
 		Wire(in=instruction[2], out=j1);
 		Wire(in=instruction[1], out=j2);
 		Wire(in=instruction[0], out=j3);
+
+		// writeM
+		And(a=msb, b=d3, out=writeM);
 		
 		// Mux0
 		And(a=d1, b=msb, out=mux0Sel);
