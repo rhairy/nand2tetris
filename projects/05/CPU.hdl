@@ -56,20 +56,27 @@ CHIP CPU {
 		Wire(in=instruction[0], out=j3);
 		
 		// Mux0
-		Mux16(a=instruction, b=aluOut, sel=d1, out=mux0Out);
+		And(a=d1, b=msb, out=mux0Sel);
+		Mux16(a=instruction, b=aluOut, sel=mux0Sel, out=mux0Out);
+		
 		// Mux1
-		Mux16(a=regAOut, b=inM, sel=a, out=mux1Out);
+		And(a=a, b=msb, out=mux1Sel);
+		Mux16(a=regAOut, b=inM, sel=mux1Sel, out=mux1Out);
+		
 		// A register
 		Not(in=msb, out=msbNot);
 		Or(a=d1, b=msbNot, out=regALoad);
-		Register(in=mux0Out, load=regALoad, out=regAOut, out[0..14]=addressM);
+		ARegister(in=mux0Out, load=regALoad, out=regAOut, out[0..14]=addressM);
+		
 		// D Register
-		Register(in=aluOut, load=d2, out=regDOut);
+		And(a=d2, b=msb, out=regDLoad);
+		DRegister(in=aluOut, load=regDLoad, out=regDOut);
 		// PC
 		Nand(a=msb, b=jmp, out=pcInc);
 		PC(in=regAOut, load=jmp, inc=pcInc, reset=reset, out[0..14]=pc);
+		
 		// ALU
-		ALU(zx=zx, nx=instruction[5], zy=zy, ny=ny, f=f, no=no, out=outM, out=aluOut, zr=aluZr, ng=aluNg);
+		ALU(x=regDOut, y=mux1Out, zx=zx, nx=nx, zy=zy, ny=ny, f=f, no=no, out=outM, out=aluOut, zr=aluZr, ng=aluNg);
 		
 		// computer the opposites of the alu output.
 		Not(in=aluZr, out=aluZrNot);
